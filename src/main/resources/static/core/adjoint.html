@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>伴随矩阵A*</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        .main {
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .btn {
+            margin: 10px;
+            font-size: 40px;
+        }
+
+        #grid {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: flex;
+        }
+
+        .form-control {
+            text-align: center;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <div id="grid"></div>
+    <button type="button" class="btn btn-primary" id="input">提交</button>
+</div>
+
+<script>
+    let param = "square";
+    let match = location.search.match(new RegExp("[?&]" + param + "=([^&]+)"));
+    let value = match && match[1];
+
+    $("body").width(Math.max(value * 100, $("body").width()));
+
+    let html = "";
+    for (let i = 0; i < value; i++) {
+        html += `<label>`;
+        for (let j = 0; j < value; j++) {
+            html += "<input class='form-control' value='0'>";
+        }
+        html += "</label>";
+    }
+    $("#grid").html(html);
+
+    let adept = () => {
+        let input = $(".form-control")
+        input.css({
+            fontSize: input.width() * 0.4
+        });
+    }
+
+    adept();
+
+    $(window).on("resize", () => {
+        adept();
+    })
+
+    $("#input").on("click", () => {
+        let data = [];
+        let labels = $("label");
+        for (let i = 0; i < value; i++) {
+            let line = [];
+            let input = $(labels).eq(i).children();
+            for (let j = 0; j < value; j++) {
+                let val = $(input).eq(j).val().trim();
+                if (val != parseFloat(val)) {
+                    alert("输入有误")
+                    return;
+                }
+                line[j] = parseFloat(val);
+            }
+            data[i] = line;
+        }
+        axios.post("/adjoint/decimal",
+            data
+        ).then((res) => {
+            let resArr = res.data.data;
+            if (!Array.isArray(res.data.data)) {
+                resArr = JSON.parse(res.data.data);
+            }
+            let show = "结果：\n";
+            $.each(resArr, (i) => {
+                show += `[${resArr[i]}],\n`;
+            })
+            show += `信息：${res.data.msg}\n`;
+            show += `计算时间：${res.data.time}`;
+            alert(show);
+        }).catch((error) => {
+            console.log(error);
+        });
+    })
+</script>
+
+</body>
+</html>
